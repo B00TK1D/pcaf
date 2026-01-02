@@ -134,34 +134,31 @@ func Parse(filename string, opts ...Options) ([]Stream, error) {
 			continue
 		}
 
-		var serverIP string
-		var serverPort uint16
-
-		if options.DestinationIP != "" {
-			serverIP = options.DestinationIP
+		server := Endpoint{
+			IP:   packets[0].dstIP,
+			Port: packets[0].dstPort,
 		}
-		if options.DestinationPort != 0 {
-			serverPort = options.DestinationPort
+		client := Endpoint{
+			IP:   packets[0].srcIP,
+			Port: packets[0].srcPort,
 		}
 
-		if serverIP == "" || serverPort == 0 {
-			first := packets[0]
-			serverIP = first.dstIP
-			serverPort = first.dstPort
+		if options.DestinationIP != "" && options.DestinationIP == server.IP {
+			client, server = server, client
+		} else if options.DestinationPort != 0 && options.DestinationPort == server.Port {
+			client, server = server, client
 		}
 
 		stream := Stream{
-			Src: Endpoint{
-				IP:   serverIP,
-				Port: serverPort,
-			},
+			Src: client,
+			Dst: server,
 		}
 
 		var current *Exchanges
 		lastDirection := ""
 
 		for _, pkt := range packets {
-			isRequest := pkt.dstIP == serverIP && pkt.dstPort == serverPort
+			isRequest := pkt.dstIP == server.IP && pkt.dstPort == server.Port
 
 			if isRequest {
 				if current == nil {
