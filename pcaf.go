@@ -143,9 +143,17 @@ func Parse(filename string, opts ...Options) ([]Stream, error) {
 			Port: packets[0].srcPort,
 		}
 
-		if options.DestinationIP != "" && options.DestinationIP == server.IP {
+		if options.DestinationPort != 0 && options.DestinationPort != server.Port {
+			if options.DestinationPort != client.Port {
+				continue
+			}
 			client, server = server, client
-		} else if options.DestinationPort != 0 && options.DestinationPort == server.Port {
+		}
+
+		if options.DestinationIP != "" && options.DestinationIP != server.IP {
+			if options.DestinationIP != client.IP {
+				continue
+			}
 			client, server = server, client
 		}
 
